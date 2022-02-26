@@ -5,7 +5,8 @@ This is the code repository for the IberLEF 2022 Task : PoliticEs. Spanish Autho
 
 ## Todos
 
-[ ] Initial baseline script from the notebook using ML models
+- [ ] Initial baseline script from the notebook using ML models
+- [ ] Unsupervised analysis of cluster based on dev labels for gender, profession, polarity
 
 
 
