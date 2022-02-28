@@ -8,8 +8,14 @@ Created on Sun Feb 27 23:16:51 2022
 import pandas as pd
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.linear_model import LogisticRegression
+# from sklearn.pipeline import make_pipeline
 from sklearn import svm
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import SGDClassifier
+from sklearn.neural_network import MLPClassifier
+
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import f1_score
 from sklearn.metrics import classification_report
@@ -77,6 +83,12 @@ def train(data, X_train, X_test):
                                                        probability=True, 
                                                        class_weight='balanced', 
                                                        kernel='linear'))
+
+        # MLPClassifier(random_state=1, max_iter=500)
+        # SGDClassifier(max_iter=1000, tol=1e-3)
+        # RandomForestClassifier(max_depth=2, random_state=0)
+        # LogisticRegression()#class_weight='balanced')
+
         baselines[label].fit(X_train, data['train'][label])
         
         y_pred = baselines[label].predict(X_test)
