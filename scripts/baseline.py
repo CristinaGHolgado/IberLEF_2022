@@ -4,15 +4,24 @@ Created on Sun Feb 27 23:16:51 2022
 
 @author: Cristina GH
 """
-
+import argparse
 import pandas as pd
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-# from sklearn.linear_model import LogisticRegression
+# from sklearn.pipeline import make_pipeline
 from sklearn import svm
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import SGDClassifier
+from sklearn.neural_network import MLPClassifier
+
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.metrics import f1_score
 from sklearn.metrics import classification_report
+
+import data
+import utils
 
 
 def vectorize(dfs):
@@ -77,6 +86,12 @@ def train(data, X_train, X_test):
                                                        probability=True, 
                                                        class_weight='balanced', 
                                                        kernel='linear'))
+
+        # MLPClassifier(random_state=1, max_iter=500)
+        # SGDClassifier(max_iter=1000, tol=1e-3)
+        # RandomForestClassifier(max_depth=2, random_state=0)
+        # LogisticRegression()#class_weight='balanced')
+
         baselines[label].fit(X_train, data['train'][label])
         
         y_pred = baselines[label].predict(X_test)
@@ -102,3 +117,13 @@ def train(data, X_train, X_test):
     return baselines
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-train_file', '--train_file', required=True, help="Path to training data")
+    parser.add_argument('-test_file', '--test_file', required=True, help="Path to test data")
+    args = parser.parse_args() 
+
+    _data = data.prepare_data(args.train_file, args.test_file)
+    X_train, X_test = vectorize(_data)
+    svm_train = train(_data, X_train, X_test)
+    output = utils.submission_file(_data, svm_train, X_test)
