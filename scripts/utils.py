@@ -12,7 +12,7 @@ import argparse
 import pandas as pd
 
 
-def submission_file(df, train_, X_test):
+def submission_file(df, train_, X_test, labellist, save_predfile=False):
     '''
     
 
@@ -24,6 +24,10 @@ def submission_file(df, train_, X_test):
         DESCRIPTION.
     X_test : TYPE
         DESCRIPTION.
+    labellist : TYPE
+        DESCRIPTION.
+    save_predfile : TYPE
+        DESCRIPTION.
 
     Returns
     -------
@@ -33,9 +37,10 @@ def submission_file(df, train_, X_test):
     output_df = pd.DataFrame()
     output_df['user'] = df['test']['label']
 
-    for label in ['gender', 'profession', 'ideology_binary', 'ideology_multiclass']:
+    for label in labellist:#, 'profession', 'ideology_binary', 'ideology_multiclass']:
         output_df[label] = train_[label].predict(X_test)
     
-    print(output_df)
-    # output_df.to_csv('results.csv', index = False)
+    #print(output_df)
+    if save_predfile:
+        output_df.to_csv('results.csv', index = False)
     
