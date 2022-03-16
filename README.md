@@ -13,5 +13,5 @@ This is the code repository for the IberLEF 2022 Task : PoliticEs. Spanish Autho
 - [ ] Make record of all things done table format on google doc (literare review) - experimental + analysis-related
 - [ ] Effect of translation? sp -> en , then apply model
 - [ ] Add transformer baseline
-
+- [ ] Prepare ensemble setup - hard voting
 
