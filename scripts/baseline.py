@@ -126,7 +126,8 @@ def train(args, data, X_train, X_test):
         if args.doea:
             error_indexes  = y_pred != data['test'][label]
             error_df = pd.DataFrame({'gold': data['test'][label][error_indexes].values, 'tweet': data['test']['tweet'][error_indexes].values, 'pred': y_pred[error_indexes]})
-            print(error_df)
+            if len(error_df) >1:
+                error_df.to_csv(f'~/IberLEF_2022/logs/{args.model}_{label}_errors.tsv',sep='\t', index = False)
 
 
     f1_scores = list(f1_scores.values())
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     parser.add_argument('-test_file', '--test_file', required=True, help="Path to test data")
     parser.add_argument('-model', '--model', required = True, help='Name of classifier model', choices=['svm', 'mlp', 'sgd', 'lgr', 'rf'])
     parser.add_argument('-runclass', '--runclass' , nargs='+', help="Run classifier for class", default = ['gender' ,'profession' ,'ideology_binary', 'ideology_multiclass'])
-    parser.add_argument('-doea', '--doea', default =False, help='Perform error analysis files')
+    parser.add_argument('-doea', '--doea', action='store_true' , help='Perform error analysis files')
     args = parser.parse_args() 
 
     _data = data.prepare_data(args.train_file, args.test_file)
