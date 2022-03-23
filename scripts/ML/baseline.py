@@ -6,6 +6,7 @@ Created on Sun Feb 27 23:16:51 2022
 """
 import argparse
 import pandas as pd
+import time
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 # from sklearn.pipeline import make_pipeline
@@ -44,14 +45,14 @@ def vectorize(dfs):
     vectorizer = TfidfVectorizer(
       analyzer = 'word',
       min_df = .1,
-      max_features = 5000,
+      max_features = 500,
       lowercase = True
     ) 
     
     X_train = vectorizer.fit_transform(dfs['train']['tweet'])
 
     X_test = vectorizer.transform(dfs['test']['tweet'])
-    
+    print("Data Loaded ...")
     return X_train, X_test
 
 
@@ -88,7 +89,7 @@ def train(args, data, X_train, X_test):
                                                        C=50., 
                                                        probability=True, 
                                                        class_weight='balanced', 
-                                                       kernel='linear'))
+                                                       kernel='linear', cache_size = 4000))
         elif args.model == 'mlp':
             model = MLPClassifier(random_state=1, max_iter=500)
         elif args.model == 'sgd':
@@ -103,9 +104,9 @@ def train(args, data, X_train, X_test):
         # SGDClassifier(max_iter=1000, tol=1e-3)
         # 
         # LogisticRegression()#class_weight='balanced')
-        print(f'\nRunning {args.model} ...\n')
+        print(f'\nRunning {args.model} ...\n'); t1 = time.time()
         baselines[label].fit(X_train, data['train'][label])
-        
+        print(f"Model fitted : {time.time()-t1} seconds")
         y_pred = baselines[label].predict(X_test)
         
         class_report = classification_report(data['test'][label], 
