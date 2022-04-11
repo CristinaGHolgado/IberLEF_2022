@@ -80,7 +80,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 | Val Accuracy: {total_acc_val / len(val_data): .3f}')
      
     if args.save_model : 
-        torch.save(model.state_dict(), f"{args.save_dir}/model_{datetime.now()}.pth"); print('model saved !!') 
+        torch.save(model.state_dict(), f"{args.save_dir}/model_{datetime.now()}.pth"); print('model saved') 
 
 
 if __name__ == '__main__':
