@@ -9,6 +9,7 @@ BERT baseline
 
 import pandas as pd
 import csv
+import re
 import argparse
 import numpy as np
 import torch
@@ -20,18 +21,27 @@ class load_data:
         self.__filename = filename
         
     def load(self): 
-        df = pd.read_csv(self.__filename)
+        df = pd.read_csv(self.__filename, sep='\t', encoding='utf-8', quoting=csv.QUOTE_NONE)
         df = df.dropna()
-        df['tweet'] = df['tweet'].str.replace('@user','')
-        df = df[df.tweet.str.len() > 10]
-        return df 
+        
+        labels = ['label', 'gender', 'profession','ideology_binary','ideology_multiclass']
+        data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
+
+        for col in data_columns:
+            df[col] = df[col].astype(str) 
+
+        df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' '.join(list(set(x)))}).reset_index()
+        df_grouped.columns = df_grouped.columns.droplevel(1)
+        df_grouped['emojis'] = df_grouped['emojis'].apply(lambda x: re.sub("\[|\]|'|,", '', x))
+        
+        return df_grouped
 
 
 
 class split_data:
     def __init__(self, train_data, test_data):
         self._train_data = load_data(train_data).load()
-        self._test_data = load_data(test_data).load()
+        # self._test_data = load_data(test_data).load() 
     
     def _split(self):
         np.random.seed(112)
@@ -54,7 +64,7 @@ class spanish_dataset(torch.utils.data.Dataset):
         self.labels = [labels[label] for label in df['ideology_multiclass']]
         tokenizer = BertTokenizer.from_pretrained('dccuchile/bert-base-spanish-wwm-cased')
         self.texts = [tokenizer(text, 
-                               padding='max_length', max_length = 512, truncation=False,
+                               padding='max_length', max_length = 512, truncation=True,
                                 return_tensors="pt") for text in df['tweet']]
 
     def classes(self):
