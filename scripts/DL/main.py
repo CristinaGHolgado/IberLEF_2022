@@ -16,8 +16,9 @@ from datetime import datetime
 from utils import EarlyStopping
 
 
+
 def train(model, train_data, val_data, learning_rate, epochs):
-    
+
     train, val = spanish_dataset(train_data),spanish_dataset(val_data)
 
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=2, shuffle=True)
