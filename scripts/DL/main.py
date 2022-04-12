@@ -4,21 +4,21 @@ Created on Fri Apr  8 10:50:32 2022
 
 @author: Cristina GH
 """
-import data
-from data import load_data, split_data, spanish_dataset
+from data import split_data, spanish_dataset
 from model import BertClassifier
 import argparse
 import torch
 import numpy as np
 from torch import nn
-from transformers import BertModel
 from torch.optim import Adam
 from tqdm import tqdm
 from datetime import datetime
+from utils import EarlyStopping
+
 
 
 def train(model, train_data, val_data, learning_rate, epochs):
-    
+
     train, val = spanish_dataset(train_data),spanish_dataset(val_data)
 
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=2, shuffle=True)
@@ -29,6 +29,8 @@ def train(model, train_data, val_data, learning_rate, epochs):
 
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr= learning_rate)
+    
+    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/model_{datetime.now()}.pth")
 
     if use_cuda:
         model = model.cuda()
@@ -74,6 +76,12 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 acc = (output.argmax(dim=1) == val_label.to(torch.long)).sum().item()
                 total_acc_val += acc
             
+        if args.stop_early:
+            early_stopping(total_loss_val, model)
+            if early_stopping.early_stop:
+                print('Early stopping')
+                break 
+        
         print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(train_data): .3f} \
                 | Train Accuracy: {total_acc_train / len(train_data): .3f} \
                 | Val Loss: {total_loss_val / len(val_data): .3f} \
@@ -98,6 +106,8 @@ if __name__ == '__main__':
                      help='Number of epochs. Default 2')
     parser.add_argument('--LR', default=1e-6, type=int,
                      help='Learning rate')
+    parser.add_argument('--stop_early', action="store_true", 
+						help='whether to use early stopping')
     
     args = parser.parse_args() 
 
