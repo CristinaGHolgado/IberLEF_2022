@@ -87,7 +87,7 @@ def train(model, train_data, val_data, learning_rate, epochs):
                 | Val Accuracy: {total_acc_val / len(val_data): .3f}')
      
     if args.save_model : 
-        torch.save(model.state_dict(), f"{args.save_dir}/model_{datetime.now()}.pth"); print('model saved') 
+        torch.save(model.state_dict(), f"{args.save_dir}/bertmodel_{datetime.now()}.pth"); print('model saved') 
 
 
 if __name__ == '__main__':
@@ -99,11 +99,8 @@ if __name__ == '__main__':
                         help="Path to test data")
     parser.add_argument('--save_model', action="store_true", 
 						help='whether to save the model')
-    parser.add_argument('--save_dir', default="..\\..\\models",
+    parser.add_argument('--save_dir', default="./../../logs",
                      help='Model dir')
-
-    parser.add_argument('--model', default= BertClassifier(),
-                     help='Number of epochs. Default 2')    
     parser.add_argument('--EPOCHS', default=2, type=int,
                      help='Number of epochs. Default 2')
     parser.add_argument('--LR', default=1e-6, type=int,
@@ -114,5 +111,5 @@ if __name__ == '__main__':
     args = parser.parse_args() 
 
     df_train, df_val, df_test = split_data(args.train_file, args.test_file)._split()
-
-    train(args.model, df_train, df_val, args.LR, args.EPOCHS)
+    model = BertClassifier()
+    train(model, df_train, df_val, args.LR, args.EPOCHS)
