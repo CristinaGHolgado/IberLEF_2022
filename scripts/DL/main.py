@@ -21,8 +21,8 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
 
     train, val = spanish_dataset(train_data, lm),spanish_dataset(val_data, lm)
 
-    train_dataloader = torch.utils.data.DataLoader(train, batch_size=2, shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(val, batch_size=2)
+    train_dataloader = torch.utils.data.DataLoader(train, batch_size=128, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val, batch_size=128)
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -30,7 +30,7 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr= learning_rate)
     
-    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/model_{datetime.now()}.pth")
+    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/bertmodel_{datetime.now()}.pth")
 
     if use_cuda:
         model = model.cuda()
@@ -39,8 +39,9 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
     for epoch_num in range(epochs):
         total_acc_train = 0
         total_loss_train = 0
-        
-        for train_input, train_label in tqdm(train_dataloader):
+
+        model.train()
+        for train_input, train_label in tqdm(train_dataloader, desc="Training"):
             train_label = train_label.to(device)
             mask = train_input['attention_mask'].to(device)
             input_id = train_input['input_ids'].squeeze(1).to(device)
@@ -59,10 +60,10 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
             
         total_acc_val = 0
         total_loss_val = 0
-
+        model.eval()
         with torch.no_grad():
             
-            for val_input, val_label in val_dataloader:
+            for val_input, val_label in tqdm(val_dataloader,desc="Validation"):
                 
                 val_label = val_label.to(device)
                 mask = val_input['attention_mask'].to(device)
