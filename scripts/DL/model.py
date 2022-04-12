@@ -9,17 +9,21 @@ Created on Sun Apr 10 21:43:43 2022
 import torch
 import numpy as np
 from torch import nn
-from transformers import BertModel
+from transformers import AutoTokenizer, AutoModel
 
 
 
 class BertClassifier(nn.Module):
 
-    def __init__(self, dropout=0.5):
+    def __init__(self, lm, dropout=0.5):
+        '''
+        lm : STRING
+            Langauage model name from hugging face
+        '''
 
         super(BertClassifier, self).__init__()
 
-        self.bert = BertModel.from_pretrained('bert-base-multilingual-cased')
+        self.bert = AutoModel.from_pretrained(lm)
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(768, 5)
         self.relu = nn.ReLU()

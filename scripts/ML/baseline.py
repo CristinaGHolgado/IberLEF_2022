@@ -144,9 +144,11 @@ if __name__ == '__main__':
     parser.add_argument('-model', '--model', required = True, help='Name of classifier model', choices=['svm', 'mlp', 'sgd', 'lgr', 'rf'])
     parser.add_argument('-runclass', '--runclass' , nargs='+', help="Run classifier for class", default = ['gender' ,'profession' ,'ideology_binary', 'ideology_multiclass'])
     parser.add_argument('-doea', '--doea', action='store_true' , help='Perform error analysis files')
+    parser.add_argument('-save_pred', '--save_pred', action='store_true', help='Saving prediction on test set')
     args = parser.parse_args() 
 
     _data = data.prepare_data(args.train_file, args.test_file)
     X_train, X_test = vectorize(_data)
     svm_train = train(args, _data, X_train, X_test)
-    output = utils.submission_file(_data, svm_train, X_test, args.runclass)
+    if args.save_pred:
+        output = utils.submission_file(_data, svm_train, X_test, args.runclass)

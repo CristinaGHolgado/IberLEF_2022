@@ -13,7 +13,7 @@ import re
 import argparse
 import numpy as np
 import torch
-from transformers import BertTokenizer
+from transformers import AutoTokenizer, AutoModel
 
 
 class load_data:
@@ -60,9 +60,10 @@ labels = {'left':0,
 
 class spanish_dataset(torch.utils.data.Dataset):
 
-    def __init__(self, df):
+    def __init__(self, df, lm):
         self.labels = [labels[label] for label in df['ideology_multiclass']]
-        tokenizer = BertTokenizer.from_pretrained('dccuchile/bert-base-spanish-wwm-cased')
+        # 'dccuchile/bert-base-spanish-wwm-cased'
+        tokenizer = AutoTokenizer.from_pretrained(lm)
         self.texts = [tokenizer(text, 
                                padding='max_length', max_length = 512, truncation=True,
                                 return_tensors="pt") for text in df['tweet']]
