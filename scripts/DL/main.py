@@ -17,9 +17,9 @@ from utils import EarlyStopping
 
 
 
-def train(model, train_data, val_data, learning_rate, epochs):
+def train(model, train_data, val_data, learning_rate, epochs, lm):
 
-    train, val = spanish_dataset(train_data),spanish_dataset(val_data)
+    train, val = spanish_dataset(train_data, lm),spanish_dataset(val_data, lm)
 
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=2, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val, batch_size=2)
@@ -98,6 +98,8 @@ if __name__ == '__main__':
                         help="Path to training data") 
     parser.add_argument('-test_file', '--test_file', required=True,
                         help="Path to test data")
+    parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
+                        help="Hugging face language model name")
     parser.add_argument('--save_model', action="store_true", 
 						help='whether to save the model')
     parser.add_argument('--save_dir', default="./../../logs",
@@ -112,5 +114,5 @@ if __name__ == '__main__':
     args = parser.parse_args() 
 
     df_train, df_val, df_test = split_data(args.train_file, args.test_file)._split()
-    model = BertClassifier()
-    train(model, df_train, df_val, args.LR, args.EPOCHS)
+    model = BertClassifier(args.lm)
+    train(model, df_train, df_val, args.LR, args.EPOCHS, args.lm)
