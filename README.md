@@ -17,6 +17,6 @@ This is the code repository for the IberLEF 2022 Task : PoliticEs. Spanish Autho
 - [ ] Prepare ensemble setup - hard voting
 - [x] bert notebook to script
 - [ ] different preprocessed data version - get and upload on github (e.g. data_noprocessed, data_punctuationremoved , etc)
-- [ ] preprocessing script add
-- [ ] manual analysis , emojis usage ditribution , global_topics (add more)
+- [x] preprocessing script add
+- [x] manual analysis , emojis usage ditribution , global_topics (add more)
 - [ ] finalize experiment plan
