@@ -41,7 +41,8 @@ def prepare_data(train, test):
       'test': df_test
     }
     
-    '''
+    # tweet aggregation
+    
     for key, df in dataframes.items():
     
       columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
@@ -60,7 +61,8 @@ def prepare_data(train, test):
           merged_fields.append({**row, **{field: ' [SEP] '.join (df_user[field].fillna ('')) for field in ['tweet']}})
         
       dataframes[key] = pd.DataFrame (merged_fields)
-    '''
+    
+    #print(dataframes)
       
     return dataframes
 

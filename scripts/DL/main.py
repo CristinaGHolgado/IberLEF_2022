@@ -4,8 +4,7 @@ Created on Fri Apr  8 10:50:32 2022
 
 @author: Cristina GH
 """
-from data import split_data, spanish_dataset
-from model import BertClassifier
+
 import argparse
 import torch
 import numpy as np
@@ -15,11 +14,14 @@ from tqdm import tqdm
 from datetime import datetime
 from utils import EarlyStopping
 
+from data import split_data, spanish_dataset
+from model import BertClassifier
+from testing import load_and_run
 
 
-def train(model, train_data, val_data, learning_rate, epochs, lm):
+def train(model, train_data, val_data, args):
 
-    train, val = spanish_dataset(train_data, lm),spanish_dataset(val_data, lm)
+    train, val = spanish_dataset(train_data, args.lm, args.lclass),spanish_dataset(val_data, args.lm, args.lclass)
 
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=128, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val, batch_size=128)
@@ -28,7 +30,7 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr= learning_rate)
+    optimizer = Adam(model.parameters(), lr= args.learning_rate)
     
     early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/bertmodel_{datetime.now()}.pth")
 
@@ -36,7 +38,7 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
         model = model.cuda()
         criterion = criterion.cuda()
 
-    for epoch_num in range(epochs):
+    for epoch_num in range(args.epochs):
         total_acc_train = 0
         total_loss_train = 0
 
@@ -91,6 +93,8 @@ def train(model, train_data, val_data, learning_rate, epochs, lm):
     if args.save_model : 
         torch.save(model.state_dict(), f"{args.save_dir}/bertmodel_{datetime.now()}.pth"); print('model saved') 
 
+    return model
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -101,6 +105,8 @@ if __name__ == '__main__':
                         help="Path to test data")
     parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
                         help="Hugging face language model name")
+    parser.add_argument('-lclass', '--lclass', default='gender',
+                        help="Class label for the classifier")
     parser.add_argument('--save_model', action="store_true", 
 						help='whether to save the model')
     parser.add_argument('--save_dir', default="./../../logs",
@@ -116,4 +122,8 @@ if __name__ == '__main__':
 
     df_train, df_val, df_test = split_data(args.train_file, args.test_file)._split()
     model = BertClassifier(args.lm)
-    train(model, df_train, df_val, args.LR, args.EPOCHS, args.lm)
+    model = train(model, df_train, df_val, args)
+
+    # testing
+    load_and_run(df_test, args, model)
+

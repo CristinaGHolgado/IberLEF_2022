@@ -10,20 +10,23 @@ from sklearn.metrics import classification_report
 from model import BertClassifier
 from data import spanish_dataset
 
-def load_and_run(data, args):
+def load_and_run(df, args, model=None):
     # model path
     path = '../../logs/'
 
-    #loading model
-    model = BertClassifier()
-    model.load_state_dict(torch.load(f"{path}{args.modelname}"))
-    #print(model)
-    model.eval()
-    print('Model loaded ...')
-
-    val = spanish_dataset(data)
+    val = spanish_dataset(df, args.lm, args.lclass)
     val_dataloader = torch.utils.data.DataLoader(val, batch_size=100)
 
+
+    if model is None:
+        #loading model
+        model = BertClassifier()
+        model.load_state_dict(torch.load(f"{path}{args.modelname}"))
+        print('Model loaded ...')
+
+    #print(model)
+    model.eval()
+    
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
     criterion = nn.CrossEntropyLoss()
@@ -79,7 +82,6 @@ if __name__ == '__main__':
     df = df.dropna()
     df['tweet'] = df['tweet'].str.replace('@user','')
     df = df[df.tweet.str.len() > 10]
-
 
     load_and_run(df, args)
 

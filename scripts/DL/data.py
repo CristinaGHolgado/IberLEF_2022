@@ -50,8 +50,9 @@ labels = {'left':0,
 
 class spanish_dataset(torch.utils.data.Dataset):
 
-    def __init__(self, df, lm):
-        self.labels = [labels[label] for label in df['ideology_multiclass']]
+    def __init__(self, df, lm, lclass):
+        self.label_encoder = dict(zip(list(set(df.lclass)), list(range(len(df.lclass)))))
+        self.labels = [self.label_encoder[label] for label in df[lclass]]
         # 'dccuchile/bert-base-spanish-wwm-cased'
         tokenizer = AutoTokenizer.from_pretrained(lm)
         self.texts = [tokenizer(text, 
