@@ -3,7 +3,7 @@
 This is the code repository for the IberLEF 2022 Task : PoliticEs. Spanish Author Profiling for Political Ideology.
 
 
-## Todos
+## 🪐 Todos
 
 - [x] Initial baseline script from the notebook using ML models
 - [x] Initiate BERT notebook
