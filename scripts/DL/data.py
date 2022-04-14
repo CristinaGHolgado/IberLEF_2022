@@ -20,21 +20,30 @@ class load_data:
     def __init__(self, filename):
         self.__filename = filename
         
-    def load(self): 
-        df = pd.read_csv(self.__filename, sep='\t', encoding='utf-8', quoting=csv.QUOTE_NONE)
-        df = df.dropna()
+    def load(self):
         
-        labels = ['label', 'gender', 'profession','ideology_binary','ideology_multiclass']
-        data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
+        with open(self.__filename, 'r', encoding='utf-8') as csvfile:
+            dialect = csv.Sniffer().sniff(csvfile.readline())
+            delimiter = str(dialect.delimiter)
+            try:
+                df = pd.read_csv(self.__filename, sep=str(dialect.delimiter))
+                return df
+            
+            except pd.errors.ParserError: ## preprocessed df with +columns
+                df = pd.read_csv(self.__filename, sep=str(delimiter[0]), encoding='utf-8', quoting=csv.QUOTE_NONE)
+                df = df.dropna()
+                
+                labels = ['label', 'gender', 'profession','ideology_binary','ideology_multiclass']
+                data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
+                
+                for col in data_columns:
+                    df[col] = df[col].astype(str) 
 
-        for col in data_columns:
-            df[col] = df[col].astype(str) 
-
-        df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' '.join(list(set(x)))}).reset_index()
-        df_grouped.columns = df_grouped.columns.droplevel(1)
-        df_grouped['emojis'] = df_grouped['emojis'].apply(lambda x: re.sub("\[|\]|'|,", '', x))
+                df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' '.join(list(set(x)))}).reset_index()
+                df_grouped.columns = df_grouped.columns.droplevel(1)
+                df_grouped['emojis'] = df_grouped['emojis'].apply(lambda x: re.sub("\[|\]|'|,", '', x))
         
-        return df_grouped
+                return df_grouped
 
 
 
