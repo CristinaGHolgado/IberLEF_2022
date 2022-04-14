@@ -164,7 +164,8 @@ def return_preprocessed_data(file, col, save_dir):
     print('~ extracting emojis')
     df['emojis'] = df[col].apply(lambda x: TweetPreprocessing.extract_emoji(x))
 
-    fname = save_dir + '\preprocessed_' + file.split('\\')[-1]
+    #fname = save_dir + '\preprocessed_' + file.split('\\')[-1]
+    fname = save_dir + '/preprocessed_' + file.split('/')[-1]
     print('file save at {fname}')
     df.to_csv(fname, sep='\t', encoding='utf-8', quoting=csv.QUOTE_NONE)
     
