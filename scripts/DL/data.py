@@ -14,7 +14,7 @@ import argparse
 import numpy as np
 import torch
 from transformers import AutoTokenizer, AutoModel
-
+import tqdm
 
 class load_data:
     def __init__(self, filename):
@@ -23,10 +23,28 @@ class load_data:
     def load(self):
         
         with open(self.__filename, 'r', encoding='utf-8') as csvfile:
-            dialect = csv.Sniffer().sniff(csvfile.readline())
+            
+            dialect = csv.Sniffer().sniff(csvfile.readline()) # detect delimiter
             delimiter = str(dialect.delimiter)
+            
             try:
                 df = pd.read_csv(self.__filename, sep=str(dialect.delimiter))
+                print(">> input file: \n",df.head())
+                
+                columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
+                group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
+                df_users = group[columns_to_group_by_user].agg(func = ['count'], as_index = False, observed = True).index.to_frame(index = False)
+                merged_fields = []
+                pbar =  tqdm.tqdm(df_users.iterrows(), total = df_users.shape[0], desc = "merging users")
+
+                for index, row in pbar:
+                    df_user = df[(df['label'] == row['label'])]
+                    merged_fields.append({**row, **{field: ' '.join(df_user[field].fillna('')) for field in ['tweet']}})
+                
+                df = pd.DataFrame(merged_fields)
+                
+                print(">> User merged input file:\n", df.head())
+                
                 return df
             
             except pd.errors.ParserError: ## preprocessed df with +columns
