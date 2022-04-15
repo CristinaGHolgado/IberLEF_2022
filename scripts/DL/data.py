@@ -27,7 +27,7 @@ class load_data:
             dialect = csv.Sniffer().sniff(csvfile.readline()) # detect delimiter
             delimiter = str(dialect.delimiter)
             
-            try:
+            if str(dialect.delimiter) == ',':
                 df = pd.read_csv(self.__filename, sep=str(dialect.delimiter))
                 print(">> input file: \n",df.head())
                 
@@ -39,7 +39,7 @@ class load_data:
 
                 for index, row in pbar:
                     df_user = df[(df['label'] == row['label'])]
-                    merged_fields.append({**row, **{field: ' '.join(df_user[field].fillna('')) for field in ['tweet']}})
+                    merged_fields.append({**row, **{field: ' [SEP] '.join(df_user[field].fillna('')) for field in ['tweet']}})
                 
                 df = pd.DataFrame(merged_fields)
                 
@@ -47,7 +47,8 @@ class load_data:
                 
                 return df
             
-            except pd.errors.ParserError: ## preprocessed df with +columns
+            # except pd.errors.ParserError: ## preprocessed df with +columns
+            else:
                 df = pd.read_csv(self.__filename, sep=str(delimiter[0]), encoding='utf-8', quoting=csv.QUOTE_NONE)
                 df = df.dropna()
                 
@@ -57,10 +58,10 @@ class load_data:
                 for col in data_columns:
                     df[col] = df[col].astype(str) 
 
-                df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' '.join(list(set(x)))}).reset_index()
+                df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' [SEP] '.join(list(set(x)))}).reset_index()
                 df_grouped.columns = df_grouped.columns.droplevel(1)
                 df_grouped['emojis'] = df_grouped['emojis'].apply(lambda x: re.sub("\[|\]|'|,", '', x))
-        
+
                 return df_grouped
 
 
@@ -89,6 +90,7 @@ class spanish_dataset(torch.utils.data.Dataset):
 
     def __init__(self, df, lm, lclass):
         self.label_encoder = dict(zip(list(set(df[lclass])), list(range(len(df[lclass])))))
+        print(self.label_encoder)
         self.labels = [self.label_encoder[label] for label in df[lclass]]
         # 'dccuchile/bert-base-spanish-wwm-cased'
         tokenizer = AutoTokenizer.from_pretrained(lm)

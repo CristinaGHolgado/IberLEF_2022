@@ -21,7 +21,7 @@ from testing import load_and_run
 
 def train(model, train_data, val_data, args):
 
-    train, val = spanish_dataset(train_data, args.lm, args.lclass),spanish_dataset(val_data, args.lm, args.lclass)
+    train, val = spanish_dataset(train_data, args.lm, args.lclass), spanish_dataset(val_data, args.lm, args.lclass)
 
     train_dataloader = torch.utils.data.DataLoader(train, batch_size=128, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(val, batch_size=128)
@@ -30,7 +30,7 @@ def train(model, train_data, val_data, args):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr= args.learning_rate)
+    optimizer = Adam(model.parameters(), lr= args.LR)
     
     early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/bertmodel_{datetime.now()}.pth")
 
@@ -38,7 +38,7 @@ def train(model, train_data, val_data, args):
         model = model.cuda()
         criterion = criterion.cuda()
 
-    for epoch_num in range(args.epochs):
+    for epoch_num in range(args.EPOCHS):
         total_acc_train = 0
         total_loss_train = 0
 
