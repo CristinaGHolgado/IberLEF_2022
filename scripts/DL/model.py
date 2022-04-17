@@ -15,7 +15,7 @@ from transformers import AutoTokenizer, AutoModel
 
 class BertClassifier(nn.Module):
 
-    def __init__(self, lm, dropout=0.5):
+    def __init__(self, lm, nclass, dropout=0.5):
         '''
         lm : STRING
             Langauage model name from hugging face
@@ -25,7 +25,7 @@ class BertClassifier(nn.Module):
 
         self.bert = AutoModel.from_pretrained(lm)
         self.dropout = nn.Dropout(dropout)
-        self.linear = nn.Linear(768, 5)
+        self.linear = nn.Linear(768, nclass)
         self.relu = nn.ReLU()
 
     def forward(self, input_id, mask):

@@ -13,18 +13,15 @@ from torch.optim import Adam
 from tqdm import tqdm
 from datetime import datetime
 from utils import EarlyStopping
+import sklearn
+from sklearn.model_selection import train_test_split
 
-from data import split_data, spanish_dataset
+from data import load_data, spanish_dataset
 from model import BertClassifier
 from testing import load_and_run
 
 
-def train(model, train_data, val_data, args):
-
-    train, val = spanish_dataset(train_data, args.lm, args.lclass), spanish_dataset(val_data, args.lm, args.lclass)
-
-    train_dataloader = torch.utils.data.DataLoader(train, batch_size=128, shuffle=True)
-    val_dataloader = torch.utils.data.DataLoader(val, batch_size=128)
+def train(model, train_dataloader, val_dataloader, args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -93,7 +90,7 @@ def train(model, train_data, val_data, args):
     if args.save_model : 
         torch.save(model.state_dict(), f"{args.save_dir}/bertmodel_{datetime.now()}.pth"); print('model saved') 
 
-    return model
+    return models
 
 
 if __name__ == '__main__':
@@ -115,14 +112,24 @@ if __name__ == '__main__':
                      help='Number of epochs. Default 2')
     parser.add_argument('--LR', default=1e-6, type=int,
                      help='Learning rate')
+    parser.add_argument('--BATCH_SIZE', default=128, type=int,
+                     help='Batch size')
     parser.add_argument('--stop_early', action="store_true", 
 						help='whether to use early stopping')
     
-    args = parser.parse_args() 
+    args = parser.parse_args()
+    
+    np.random.seed(112)
+    df_train, df_val = train_test_split(load_data(args.train_file), test_size=25)
+    df_test = load_data(args.test_file)
+    
+    dtrain, dval = spanish_dataset(df_train, args.lm, args.lclass), spanish_dataset(df_val, args.lm, args.lclass)
+    train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(dval, batch_size=args.BATCH_SIZE)
+    nclass = len(dtrain.label_encoder)
+    model = BertClassifier(args.lm, nclass)
 
-    df_train, df_val, df_test = split_data(args.train_file, args.test_file)._split()
-    model = BertClassifier(args.lm)
-    model = train(model, df_train, df_val, args)
+    model = train(model, train_dataloader, val_dataloader, args)
 
     # testing
     load_and_run(df_test, args, model)
