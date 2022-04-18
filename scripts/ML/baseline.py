@@ -61,11 +61,11 @@ def train(args, data, X_train, X_test):
                                                        class_weight='balanced', 
                                                        kernel='linear', cache_size = 4000))
         elif args.model == 'mlp':
-            model = MLPClassifier(random_state=1, max_iter=500)
+            model = MLPClassifier(max_iter=500)
         elif args.model == 'sgd':
             model = SGDClassifier(max_iter=1000, tol=1e-3)
         elif args.model == 'rf':
-            model = RandomForestClassifier(max_depth=2, random_state=0)
+            model = RandomForestClassifier(max_depth=2)
         elif args.model == 'lgr':
             model = LogisticRegression()#class_weight='balanced')
         elif args.model == 'nb':
@@ -106,7 +106,7 @@ def train(args, data, X_train, X_test):
     f1_scores = list(f1_scores.values())
     print ("\nOVERALL F1-score : {f1}".format(f1 = sum(f1_scores) / len(f1_scores)))
     
-    return baselines
+    return baselines, f1_scores
 
 
 if __name__ == '__main__':
@@ -118,6 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('-runclass', '--runclass' , nargs='+', help="Run classifier for class", default = ['gender' ,'profession' ,'ideology_binary', 'ideology_multiclass'])
     parser.add_argument('-doea', '--doea', action='store_true' , help='Perform error analysis files')
     parser.add_argument('-save_pred', '--save_pred', action='store_true', help='Saving prediction on test set')
+    parser.add_argument('-REPEAT', '--REPEAT', default=1, type=int, help='repeat the experiment')
     args = parser.parse_args() 
 
     _data = data.prepare_data(args.train_file, args.test_file)
@@ -132,6 +133,21 @@ if __name__ == '__main__':
         X_train, X_test = utils.get_tfidf(_data)
 
     print(X_train.shape, X_test.shape)
-    svm_train = train(args, _data, X_train, X_test)
-    if args.save_pred:
-        output = utils.submission_file(_data, svm_train, X_test, args)
+    f1s = []
+    for i in range(args.REPEAT): 
+        svm_train, _  = train(args, _data, X_train, X_test)
+        f1s.extend(_)
+
+        if args.save_pred:
+            output = utils.submission_file(_data, svm_train, X_test, args)
+
+    print(f1s)
+
+
+    # cross validation
+    #y_train = _data['train'][args.runclass].values.ravel()
+    #from sklearn.model_selection import cross_val_score, cross_validate
+    #print(svm_train[args.runclass[0]])
+    #scores = cross_validate(svm_train[args.runclass[0]], X_train, y_train, cv=5, scoring='f1_macro')
+    #print(scores)
+    #print("%0.2f accuracy with a standard deviation of %0.2f" % (scores['test_score'].mean(), scores['test_score'].std()))

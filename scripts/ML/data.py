@@ -11,9 +11,24 @@ import numpy as np
 from tqdm import tqdm
 
 
+def aggregate_users(df):
+    columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
 
-def preprocess_data():
-    pass
+    group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
+
+    # Custom df per user
+    df_users = group[columns_to_group_by_user].agg(func = ['count'], as_index = False, observed = True).index.to_frame (index = False)
+
+    merged_fields = []
+
+    pbar = tqdm(df_users.iterrows(), total = df_users.shape[0], desc = "merging users")
+
+    for index, row in pbar:
+        df_user = df[(df['label'] == row['label'])]
+        merged_fields.append({**row, **{field: ' [SEP] '.join (df_user[field].fillna ('')) for field in ['tweet']}})
+
+    df = pd.DataFrame (merged_fields)
+    return df
 
 
 def prepare_data(train, test):
@@ -32,9 +47,14 @@ def prepare_data(train, test):
         DESCRIPTION.
 
     '''
-    
-    df_train = pd.read_csv(train)
-    df_test = pd.read_csv(test)
+    try:
+      df_train = pd.read_csv(train)
+    except:
+      df_train = pd.read_csv(train, sep='\t')
+    try:
+      df_test = pd.read_csv(test)
+    except:
+      df_test = pd.read_csv(test, sep='\t')
     
     dataframes = {
       'train': df_train, 
@@ -44,23 +64,7 @@ def prepare_data(train, test):
     # tweet aggregation
     
     for key, df in dataframes.items():
-    
-      columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
-    
-      group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
-    
-      # Custom df per user
-      df_users = group[columns_to_group_by_user].agg(func = ['count'], as_index = False, observed = True).index.to_frame (index = False)
-    
-      merged_fields = []
-    
-      pbar = tqdm(df_users.iterrows(), total = df_users.shape[0], desc = "merging users")
-        
-      for index, row in pbar:
-          df_user = df[(df['label'] == row['label'])]
-          merged_fields.append({**row, **{field: ' [SEP] '.join (df_user[field].fillna ('')) for field in ['tweet']}})
-        
-      dataframes[key] = pd.DataFrame (merged_fields)
+      dataframes[key] = aggregate_users(df)
     
     #print(dataframes)
       

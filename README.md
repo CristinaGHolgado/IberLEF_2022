@@ -16,13 +16,14 @@ This is the code repository for the IberLEF 2022 Task : PoliticEs. Spanish Autho
 - [x] manual analysis , emojis usage ditribution , global_topics (add more)
 - [x] finalize experiment plan
 - [x] Prepare ensemble setup - hard voting
+- [x] different preprocessed data version - get and upload on github (e.g. data_noprocessed, data_punctuationremoved , etc)
 - [ ] Unsupervised analysis of cluster based on dev labels for gender, profession, polarity - add all three 2D and 3D graphs
 - [ ] Human annotation to analysis how text are labeled for different class categories
 - [ ] Effect of translation? sp -> en , then apply model
-- [ ] different preprocessed data version - get and upload on github (e.g. data_noprocessed, data_punctuationremoved , etc)
 - [ ] textgcn
 - [ ] bert+lstm
 - [ ] bert+lstm+att
 - [ ] xlm LM model working check
 - [ ] add hyperparameter tuning ML
 - [ ] add hyperparameter tunning DL
+- [ ] add lstm
