@@ -16,74 +16,55 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 import tqdm
 
-class load_data:
-    def __init__(self, filename):
-        self.__filename = filename
+def load_data(file):      
+    with open(file, 'r', encoding='utf-8') as csvfile:
         
-    def load(self):
+        dialect = csv.Sniffer().sniff(csvfile.readline()) # detect delimiter
         
-        with open(self.__filename, 'r', encoding='utf-8') as csvfile:
-            
-            dialect = csv.Sniffer().sniff(csvfile.readline()) # detect delimiter
-            delimiter = str(dialect.delimiter)
-            
-            try:
-                df = pd.read_csv(self.__filename, sep=str(dialect.delimiter))
-                print(">> input file: \n",df.head())
-                
-                columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
-                group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
-                df_users = group[columns_to_group_by_user].agg(func = ['count'], as_index = False, observed = True).index.to_frame(index = False)
-                merged_fields = []
-                pbar =  tqdm.tqdm(df_users.iterrows(), total = df_users.shape[0], desc = "merging users")
-
-                for index, row in pbar:
-                    df_user = df[(df['label'] == row['label'])]
-                    merged_fields.append({**row, **{field: ' '.join(df_user[field].fillna('')) for field in ['tweet']}})
-                
-                df = pd.DataFrame(merged_fields)
-                
-                print(">> User merged input file:\n", df.head())
-                
-                return df
-            
-            except pd.errors.ParserError: ## preprocessed df with +columns
-                df = pd.read_csv(self.__filename, sep=str(delimiter[0]), encoding='utf-8', quoting=csv.QUOTE_NONE)
-                df = df.dropna()
-                
-                labels = ['label', 'gender', 'profession','ideology_binary','ideology_multiclass']
-                data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
-                
-                for col in data_columns:
-                    df[col] = df[col].astype(str) 
-
-                df_grouped = df.groupby(labels)[data_columns].agg({lambda x: ' '.join(list(set(x)))}).reset_index()
-                df_grouped.columns = df_grouped.columns.droplevel(1)
-                df_grouped['emojis'] = df_grouped['emojis'].apply(lambda x: re.sub("\[|\]|'|,", '', x))
+        df = ''
         
-                return df_grouped
+        try:
+            df = pd.read_csv(file, sep=str(dialect.delimiter))
+        
+        except pd.errors.ParserError:
+            df = pd.read_csv(file, sep=str(dialect.delimiter), quoting=csv.QUOTE_NONE)
+            
+        columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
+        data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
+        
+        group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
+        df_users = group[columns_to_group_by_user].agg(func = ['count'], as_index = False, observed = True).index.to_frame(index = False)
+        merged_fields = []
+        pbar =  tqdm.tqdm(df_users.iterrows(), total = df_users.shape[0], desc = "merging users")
+
+        for index, row in pbar:
+            df_user = df[(df['label'] == row['label'])]
+            
+            if len(df.columns) >  7:
+                merged_fields.append({**row, **{field: ' [SEP] '.join(df_user[field].fillna('')) for field in data_columns}})
+            else:
+                merged_fields.append({**row, **{field: ' [SEP] '.join(df_user[field].fillna('')) for field in ['tweet']}})
+        
+        df = pd.DataFrame(merged_fields)
+        
+        return df
 
 
 
-class split_data:
-    def __init__(self, train_data, test_data):
-        self._train_data = load_data(train_data).load()
-        # self._test_data = load_data(test_data).load() 
+# class split_data:
+#     def __init__(self, train_data, test_data):
+#         self._train_data = load_data(train_data).load()
+#         # self._test_data = load_data(test_data).load() 
     
-    def _split(self):
-        np.random.seed(112)
-        df_train, df_val, df_test = np.split(self._train_data.sample(frac=1, random_state=42), 
-                                         [int(.8*len(self._train_data)), int(.9*len(self._train_data))])
-        print(len(df_train),len(df_val), len(df_test))
+#     def _split(self):
+#         np.random.seed(112)
+#         df_train, df_val, df_test = np.split(self._train_data.sample(frac=1, random_state=42), 
+#                                          [int(.8*len(self._train_data)), int(.9*len(self._train_data))])
+#         print(len(df_train),len(df_val), len(df_test))
         
-        return df_train, df_val, df_test
+#         return df_train, df_val, df_test
 
 
-
-labels = {'left':0,
-          'moderate_left':1,
-          'right':2,
-          'moderate_right':3}
 
 class spanish_dataset(torch.utils.data.Dataset):
 
