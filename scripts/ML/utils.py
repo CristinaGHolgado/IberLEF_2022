@@ -62,7 +62,7 @@ def submission_file(df, train_, X_test, args):
     print('results saved!!!')
 
 
-def get_tfidf(dfs):
+def get_tfidf(dfs, col='tweet'):
     '''
     
 
@@ -86,15 +86,15 @@ def get_tfidf(dfs):
       lowercase = True
     ) 
     
-    X_train = vectorizer.fit_transform(dfs['train']['tweet'])
+    X_train = vectorizer.fit_transform(dfs['train'][col])
 
-    X_test = vectorizer.transform(dfs['test']['tweet'])
+    X_test = vectorizer.transform(dfs['test'][col])
     print("Data Loaded ...")
     return X_train, X_test
 
 
 
-def get_ngramfeat(dfs, ngram=(1,1), score_type='count'):
+def get_ngramfeat(dfs, ngram=(1,1), score_type='count', col='tweet'):
 
     from stop_words import get_stop_words
     stop_words = get_stop_words('spanish')
@@ -104,9 +104,9 @@ def get_ngramfeat(dfs, ngram=(1,1), score_type='count'):
     else:
         vectorizer = TfidfVectorizer(analyzer = 'word',ngram_range=ngram, stop_words=stop_words)
 
-    X_train = vectorizer.fit_transform(dfs['train']['tweet'])
+    X_train = vectorizer.fit_transform(dfs['train'][col])
 
-    X_test = vectorizer.transform(dfs['test']['tweet'])
+    X_test = vectorizer.transform(dfs['test'][col])
     print("Data Loaded ...")
     return X_train, X_test
 
@@ -150,16 +150,16 @@ def return_lasers(train_tweets):
     return x_train
 
 
-def get_glovefeat(dfs):
+def get_glovefeat(dfs, col='tweet'):
 
-    X_train = return_wvecs(dfs['train']['tweet'])
-    X_test = return_wvecs(dfs['test']['tweet'])
+    X_train = return_wvecs(dfs['train'][col])
+    X_test = return_wvecs(dfs['test'][col])
 
     print("Data Loaded ...")
     return X_train, X_test
 
 
-def get_laserfeat(dfs, load_pretrained=True):
+def get_laserfeat(dfs, load_pretrained=True, col='tweet'):
 
     # load pretrained dfeats
     prefix = '/home/amansinha/IberLEF_2022/notebook/'
@@ -171,8 +171,8 @@ def get_laserfeat(dfs, load_pretrained=True):
 
     else:
 
-        X_train = return_lasers(dfs['train']['tweet'])
-        X_test = return_lasers(dfs['test']['tweet'])
+        X_train = return_lasers(dfs['train'][col])
+        X_test = return_lasers(dfs['test'][col])
 
     print("Data Loaded ...")
     return X_train, X_test

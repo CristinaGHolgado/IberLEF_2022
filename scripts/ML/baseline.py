@@ -93,7 +93,7 @@ def train(args, data, X_train, X_test):
         # class_report_df.to_csv(str(f"classification_report_{label}.tsv"), sep='\t', encoding='utf-8')
         
         print(label.upper())
-        print(class_report_df)
+        #print(class_report_df)
 
         # error - analysis
         if args.doea:
@@ -119,18 +119,19 @@ if __name__ == '__main__':
     parser.add_argument('-doea', '--doea', action='store_true' , help='Perform error analysis files')
     parser.add_argument('-save_pred', '--save_pred', action='store_true', help='Saving prediction on test set')
     parser.add_argument('-REPEAT', '--REPEAT', default=1, type=int, help='repeat the experiment')
+    parser.add_argument('-inpcol', '--inpcol', default='tweet', help='choose preprocessed column', choices=['tweet', 'clean_data','lemmatized_data', 'lemmatized_nostw', 'emojis'])
     args = parser.parse_args() 
 
     _data = data.prepare_data(args.train_file, args.test_file)
 
     if args.feat == 'glove':
-        X_train, X_test = utils.get_glovefeat(_data)
+        X_train, X_test = utils.get_glovefeat(_data, col=args.inpcol)
     elif args.feat == 'laser':
-        X_train, X_test = utils.get_laserfeat(_data)
+        X_train, X_test = utils.get_laserfeat(_data, col=args.inpcol)
     elif args.feat == 'ngram':
-        X_train, X_test = utils.get_ngramfeat(_data)
+        X_train, X_test = utils.get_ngramfeat(_data, col=args.inpcol)
     elif args.feat == 'tfidf':
-        X_train, X_test = utils.get_tfidf(_data)
+        X_train, X_test = utils.get_tfidf(_data, col=args.inpcol)
 
     print(X_train.shape, X_test.shape)
     f1s = []

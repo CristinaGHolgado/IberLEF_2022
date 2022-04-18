@@ -29,3 +29,49 @@ print("All Training Scores: \n{}\n".format(gs.cv_results_['mean_train_score']))
 print("All Test Scores: \n{}\n".format(gs.cv_results_['mean_test_score']))
 # # This prints out all results during Cross-Validation in details
 #print("All Meta Results During CV Search: \n{}\n".format(gs.cv_results_))
+
+
+
+
+"""
+models= ['svm', 'mlp', 'sgd', 'lgr', 'rf', 'nb']
+
+
+svm :
+kernel{‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’}
+gamma{‘scale’, ‘auto’}
+class_wieght 
+
+mlp
+
+activation{‘identity’, ‘logistic’, ‘tanh’, ‘relu’}
+solver{‘lbfgs’, ‘sgd’, ‘adam’}
+learning_rate{‘constant’, ‘invscaling’, ‘adaptive’}
+momentum for sgd  solver: between 0 and 1
+nesterovs_momentum for sgd solver: between 0 and 1
+early_stopping : True (validation_fraction)
+beta_1, beta_2 for adam solver
+
+
+sgd :
+
+loss option : ‘hinge’, ‘log’, ‘modified_huber’, ‘squared_hinge’, ‘perceptron’, or a regression loss: ‘squared_error’, ‘huber’, ‘epsilon_insensitive’, or ‘squared_epsilon_insensitive’
+penalty{‘l2’, ‘l1’, ‘elasticnet’}
+early_stopping 
+validation_fraction
+class_weight
+
+lgr
+penalty{‘l1’, ‘l2’, ‘elasticnet’, ‘none’}
+class_weight
+solver{‘newton-cg’, ‘lbfgs’, ‘liblinear’, ‘sag’, ‘saga’}
+
+rf
+criterion{“gini”, “entropy”}
+max_features{“auto”, “sqrt”, “log2”}
+
+nb
+
+
+
+"""
