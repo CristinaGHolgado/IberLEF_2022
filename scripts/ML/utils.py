@@ -58,7 +58,7 @@ def submission_file(df, train_, X_test, args):
 
     #output_df.to_csv('out.zip', compression=compression_opts, index=False)
 
-    output_df.to_csv(f'{save_location}results_{args.model}_{args.feat}.csv', index=False)
+    output_df.to_csv(f'{save_location}testresults_{args.model}_{args.feat}.csv', index=False)
     print('results saved!!!')
 
 
@@ -139,7 +139,7 @@ def return_lasers(train_tweets):
 
     x_train = []
     for sen in tqdm(train_tweets, desc="extracting features"):
-            
+                
         embeds = laser.embed_sentences(sen.split('[SEP]')
                                 ,lang='es')
         

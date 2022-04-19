@@ -12,11 +12,15 @@ import numpy as np
 from tqdm import tqdm
 
 
-def aggregate_users(df):
+def aggregate_users(df, name='train'):
 
 
     #########
-    columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
+    if name == 'testing':
+        columns_to_group_by_user = ['label']#['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
+    else:
+        columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
+
     data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']
     
     group = df.groupby(by = columns_to_group_by_user, dropna = False, observed = True, sort = False)
@@ -55,7 +59,7 @@ def aggregate_users(df):
     return df
 
 
-def prepare_data(train, test):
+def prepare_data(train, test, testing=False):
     '''
     
     Parameters
@@ -71,6 +75,7 @@ def prepare_data(train, test):
         DESCRIPTION.
 
     '''
+    print('testing:', testing)
     try:
       df_train = pd.read_csv(train)
     except:
@@ -80,22 +85,29 @@ def prepare_data(train, test):
     except:
       df_test = pd.read_csv(test, sep='\t', quoting=csv.QUOTE_NONE)
 
-    #print("trian col:", df_train.columns)
-    #print("test col:", df_test.columns)
+    print("trian col:", df_train.columns)
+    print("test col:", df_test.columns)
     
-    dataframes = {
-      'train': df_train, 
-      'test': df_test
-    }
-    
+    if testing:
+        dataframes = {
+          'train': df_train, 
+          'testing': df_test
+        }
+    else:
+        dataframes = {
+          'train': df_train, 
+          'test': df_test
+        }
     # tweet aggregation
-    
+    new_dataframe = dict()
     for key, df in dataframes.items():
-      dataframes[key] = aggregate_users(df)
-    
+        if key == 'testing':
+            new_dataframe['test'] = aggregate_users(df, name=key)
+        else:
+            new_dataframe[key] = aggregate_users(df, name=key)
     #print(dataframes)
-      
-    return dataframes
+    assert(len(new_dataframe) == 2)
+    return new_dataframe
 
 
       
