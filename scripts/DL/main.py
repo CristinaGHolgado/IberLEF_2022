@@ -17,7 +17,7 @@ import sklearn
 from sklearn.model_selection import train_test_split
 
 from data import load_data, spanish_dataset
-from model import BertClassifier
+from model import BertClassifier, LSTM_Model
 from testing import load_and_run
 
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
                      help='Number of epochs. Default 2')
     parser.add_argument('--LR', default=1e-6, type=int,
                      help='Learning rate')
-    parser.add_argument('--BATCH_SIZE', default=128, type=int,
+    parser.add_argument('--BATCH_SIZE', default=2, type=int,
                      help='Batch size')
     parser.add_argument('--stop_early', action="store_true", 
 						help='whether to use early stopping')
@@ -127,7 +127,8 @@ if __name__ == '__main__':
     train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(dval, batch_size=args.BATCH_SIZE)
     nclass = len(dtrain.label_encoder)
-    model = BertClassifier(args.lm, nclass)
+    model = LSTM_Model(args.lm, nclass)
+    print(model)
 
     model = train(model, train_dataloader, val_dataloader, args)
 
