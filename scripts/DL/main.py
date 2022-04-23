@@ -17,7 +17,7 @@ import sklearn
 from sklearn.model_selection import train_test_split
 
 from data import load_data, spanish_dataset
-from model import BertClassifier, LSTM_Model
+from model import BertClassifier, LSTM, BiLSTM_Attention
 from testing import load_and_run
 
 
@@ -82,15 +82,15 @@ def train(model, train_dataloader, val_dataloader, args):
                 print('Early stopping')
                 break 
         
-        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(train_data): .3f} \
-                | Train Accuracy: {total_acc_train / len(train_data): .3f} \
-                | Val Loss: {total_loss_val / len(val_data): .3f} \
-                | Val Accuracy: {total_acc_val / len(val_data): .3f}')
+        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(df_train): .3f} \
+                | Train Accuracy: {total_acc_train / len(df_train): .3f} \
+                | Val Loss: {total_loss_val / len(df_val): .3f} \
+                | Val Accuracy: {total_acc_val / len(df_val): .3f}')
      
     if args.save_model : 
         torch.save(model.state_dict(), f"{args.save_dir}/bertmodel_{datetime.now()}.pth"); print('model saved') 
 
-    return models
+    return model
 
 
 if __name__ == '__main__':
@@ -102,6 +102,8 @@ if __name__ == '__main__':
                         help="Path to test data")
     parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
                         help="Hugging face language model name")
+    parser.add_argument('-type', '--type', default='bert',
+                        help="Model type")
     parser.add_argument('-lclass', '--lclass', default='gender',
                         help="Class label for the classifier")
     parser.add_argument('--save_model', action="store_true", 
@@ -127,8 +129,13 @@ if __name__ == '__main__':
     train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
     val_dataloader = torch.utils.data.DataLoader(dval, batch_size=args.BATCH_SIZE)
     nclass = len(dtrain.label_encoder)
-    model = LSTM_Model(args.lm, nclass)
-    print(model)
+    
+    if args.type == 'bert':
+        model = BertClassifier(args.lm, nclass)
+    if args.type == 'bert_lstm':
+        model = LSTM(args.lm, nclass)
+    if args.type == 'bert_lstm_att':
+        model = BiLSTM_Attention(args.lm, nclass)
 
     model = train(model, train_dataloader, val_dataloader, args)
 
