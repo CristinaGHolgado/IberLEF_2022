@@ -122,8 +122,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     np.random.seed(112)
-    df_train, df_val = train_test_split(load_data(args.train_file), test_size=25)
-    df_test = load_data(args.test_file)
+    df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=25)
+    df_test = load_data(args.test_file, agg=0)
+
+
     
     dtrain, dval = spanish_dataset(df_train, args.lm, args.lclass), spanish_dataset(df_val, args.lm, args.lclass)
     train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
