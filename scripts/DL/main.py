@@ -101,6 +101,8 @@ if __name__ == '__main__':
     
     parser.add_argument('-train_file', '--train_file', required=True,
                         help="Path to training data") 
+    parser.add_argument('-val_file', '--val_file', default=None
+                        help="Path to val data")
     parser.add_argument('-test_file', '--test_file', required=True,
                         help="Path to test data")
     parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
@@ -125,7 +127,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     np.random.seed(112)
-    df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=25)
+    if args.val_file is None:
+        df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=.1)
+    else:
+        df_val = load_data(args.val_file, agg=0)
     df_test = load_data(args.test_file, agg=0)
     print("DataSplit:", len(df_train), len(df_val), len(df_test))
     
