@@ -144,5 +144,7 @@ if __name__ == '__main__':
     model = train(model, train_dataloader, val_dataloader, args)
 
     # testing
-    load_and_run(df_test, args, model)
+    #print(dtrain.label_encoder)
+    #print(df_test)
+    load_and_run(df_test, args, dtrain.label_encoder, model, no_labels=True)
 

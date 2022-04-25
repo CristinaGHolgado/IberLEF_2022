@@ -69,7 +69,7 @@ def train(args, data, X_train, X_test):
         elif args.model == 'rf':
             model = RandomForestClassifier(max_depth=2)
         elif args.model == 'lgr':
-            model = LogisticRegression()#class_weight='balanced')
+            model = LogisticRegression(solver='liblinear')#class_weight='balanced')
         elif args.model == 'nb':
             model = MultinomialNB()
         elif args.model == 'xgb':
@@ -163,7 +163,7 @@ if __name__ == '__main__':
     if args.REPEAT > 1:
         print(f'For {args.runclass};  mean f1: {np.mean(f1s)}')
     else:
-        print(*f1s , sep='|')
+        print(*f1s,np.mean(f1s), sep='|')
 
 
     # cross validation
