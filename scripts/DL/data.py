@@ -78,7 +78,7 @@ class spanish_dataset(torch.utils.data.Dataset):
         # 'dccuchile/bert-base-spanish-wwm-cased'
         tokenizer = AutoTokenizer.from_pretrained(lm)
         self.texts = [tokenizer(text, 
-                               padding='max_length', max_length = 512, truncation=True,
+                               padding='max_length', max_length=128, truncation=True,
                                 return_tensors="pt") for text in df['tweet']]
 
     def classes(self):

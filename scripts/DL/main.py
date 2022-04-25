@@ -17,7 +17,7 @@ import sklearn
 from sklearn.model_selection import train_test_split
 
 from data import load_data, spanish_dataset
-from model import BertClassifier, LSTM, BiLSTM_Attention
+from model import BertClassifier, LSTM, BiLSTM_Attention, SimpleBert
 from testing import load_and_run
 
 
@@ -45,6 +45,7 @@ def train(model, train_dataloader, val_dataloader, args):
             mask = train_input['attention_mask'].to(device)
             input_id = train_input['input_ids'].squeeze(1).to(device)
             
+            #output = model(input_ids = input_id, attention_mask=mask)#, mask)
             output = model(input_id, mask)
                 
             batch_loss = criterion(output, train_label.to(torch.long))
@@ -102,7 +103,7 @@ if __name__ == '__main__':
                         help="Path to test data")
     parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
                         help="Hugging face language model name")
-    parser.add_argument('-type', '--type', default='bert',
+    parser.add_argument('-type', '--type', default='bert', choices = ['bert', 'bert_linear', 'bert_lstm', 'bert_lstm_att'],
                         help="Model type")
     parser.add_argument('-lclass', '--lclass', default='gender',
                         help="Class label for the classifier")
@@ -124,8 +125,7 @@ if __name__ == '__main__':
     np.random.seed(112)
     df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=25)
     df_test = load_data(args.test_file, agg=0)
-
-
+    print("DataSplit:", len(df_train), len(df_val), len(df_test))
     
     dtrain, dval = spanish_dataset(df_train, args.lm, args.lclass), spanish_dataset(df_val, args.lm, args.lclass)
     train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
@@ -133,6 +133,8 @@ if __name__ == '__main__':
     nclass = len(dtrain.label_encoder)
     
     if args.type == 'bert':
+        model = SimpleBert(args.lm, nclass)
+    if args.type == 'bert_linear':
         model = BertClassifier(args.lm, nclass)
     if args.type == 'bert_lstm':
         model = LSTM(args.lm, nclass)

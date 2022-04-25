@@ -9,10 +9,29 @@ Created on Sun Apr 10 21:43:43 2022
 import torch
 import numpy as np
 from torch import nn
-from torch.nn.utils.rnn import pack_padded_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.nn.functional as F
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForSequenceClassification, AutoConfig
 from torch.autograd import Variable
+
+
+
+class SimpleBert(nn.Module):
+    def __init__(self, lm, nclass, dropout=0.5):
+        '''
+        lm : STRING
+            Langauage model name from hugging face
+        '''
+
+        super(SimpleBert, self).__init__()
+        self.config = AutoConfig.from_pretrained(lm, num_labels=nclass)
+        self.bert = AutoModelForSequenceClassification.from_pretrained(lm, config=self.config)
+        self.relu = nn.ReLU()
+
+    def forward(self, input_ids, attention_mask): #_id, mask):
+        with torch.no_grad():
+            pooled_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)#_ids= input_id, attention_mask=mask, return_dict=False)
+        return self.relu(pooled_output.logits)
 
 
 class BertClassifier(nn.Module):
@@ -24,15 +43,15 @@ class BertClassifier(nn.Module):
         '''
 
         super(BertClassifier, self).__init__()
-
-        self.bert = AutoModel.from_pretrained(lm)
+        self.config = AutoConfig.from_pretrained(lm, num_labels=nclass)
+        self.bert = AutoModel.from_pretrained(lm, config=self.config)
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(768, nclass)
         self.relu = nn.ReLU()
 
     def forward(self, input_id, mask):
         with torch.no_grad():
-          _, pooled_output = self.bert(input_ids= input_id, attention_mask=mask, return_dict=False)
+            _, pooled_output = self.bert(input_ids=input_id, attention_mask=mask, return_dict=False)
         dropout_output = self.dropout(pooled_output)
         linear_output = self.linear(dropout_output)
         final_layer = self.relu(linear_output)
@@ -90,7 +109,9 @@ class BiLSTM_Attention(nn.Module):
         
         lngt = [encoded_layers.shape[0]] * encoded_layers.shape[1]
         # final_hidden_state, final_cell_state : [num_layers(=1) * num_directions(=2), batch_size, n_hidden]
-        output, (final_hidden_state, final_cell_state) = self.lstm()
-        output = output.permute(1, 0, 2) # output : [batch_size, len_seq, n_hidden]
-        attn_output, attention = self.attention_net(output, final_hidden_state)
-        return self.out(attn_output), attention 
+        output, (final_hidden_state, final_cell_state) = self.lstm(pack_padded_sequence(encoded_layers, lngt))
+        unpacked_o, unpacked_lengths = pad_packed_sequence(output, batch_first=True)
+        #print(unpacked_o.shape)
+        #output = unpacked_o.permute(1, 0, 2) # output : [batch_size, len_seq, n_hidden]
+        attn_output, attention = self.attention_net(unpacked_o, final_hidden_state)
+        return self.out(attn_output)#, attention 
