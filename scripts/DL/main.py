@@ -43,6 +43,8 @@ def train(model, train_dataloader, val_dataloader, args):
         for train_input, train_label in tqdm(train_dataloader, desc="Training"):
             train_label = train_label.to(device)
             mask = train_input['attention_mask'].to(device)
+            if 'xlm' in args.lm:
+                mask = mask.squeeze(1)
             input_id = train_input['input_ids'].squeeze(1).to(device)
             
             #output = model(input_ids = input_id, attention_mask=mask)#, mask)

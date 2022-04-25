@@ -29,8 +29,8 @@ class SimpleBert(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, input_ids, attention_mask): #_id, mask):
-        with torch.no_grad():
-            pooled_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)#_ids= input_id, attention_mask=mask, return_dict=False)
+        #with torch.no_grad():
+        pooled_output = self.bert(input_ids=input_ids, attention_mask=attention_mask)#_ids= input_id, attention_mask=mask, return_dict=False)
         return self.relu(pooled_output.logits)
 
 
