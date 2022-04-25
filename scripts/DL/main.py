@@ -29,7 +29,7 @@ def train(model, train_dataloader, val_dataloader, args):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr= args.LR)
     
-    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/bertmodel_{datetime.now()}.pth")
+    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[4]}_model_{datetime.now()}.pth")
 
     if use_cuda:
         model = model.cuda()
@@ -43,7 +43,7 @@ def train(model, train_dataloader, val_dataloader, args):
         for train_input, train_label in tqdm(train_dataloader, desc="Training"):
             train_label = train_label.to(device)
             mask = train_input['attention_mask'].to(device)
-            if 'xlm' in args.lm:
+            if 'xlm1' in args.lm:
                 mask = mask.squeeze(1)
             input_id = train_input['input_ids'].squeeze(1).to(device)
             
@@ -70,7 +70,8 @@ def train(model, train_dataloader, val_dataloader, args):
                 val_label = val_label.to(device)
                 mask = val_input['attention_mask'].to(device)
                 input_id = val_input['input_ids'].squeeze(1).to(device)
-
+                if 'xlm1' in args.lm:
+                    mask = mask.squeeze(1)
                 output = model(input_id, mask)
 
                 batch_loss = criterion(output, val_label.to(torch.long))
@@ -85,13 +86,13 @@ def train(model, train_dataloader, val_dataloader, args):
                 print('Early stopping')
                 break 
         
-        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(df_train): .3f} \
-                | Train Accuracy: {total_acc_train / len(df_train): .3f} \
-                | Val Loss: {total_loss_val / len(df_val): .3f} \
-                | Val Accuracy: {total_acc_val / len(df_val): .3f}')
+        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(df_train): .6f} \
+                | Train Accuracy: {total_acc_train / len(df_train): .4f} \
+                | Val Loss: {total_loss_val / len(df_val): .6f} \
+                | Val Accuracy: {total_acc_val / len(df_val): .4f}')
      
     if args.save_model : 
-        torch.save(model.state_dict(), f"{args.save_dir}/bertmodel_{datetime.now()}.pth"); print('model saved') 
+        torch.save(model.state_dict(), f"{args.save_dir}/final_{args.type}_{args.lclass}_{args.lm[4]}_model_{datetime.now()}.pth"); print('model saved') 
 
     return model
 
@@ -101,11 +102,11 @@ if __name__ == '__main__':
     
     parser.add_argument('-train_file', '--train_file', required=True,
                         help="Path to training data") 
-    parser.add_argument('-val_file', '--val_file', default=None
+    parser.add_argument('-val_file', '--val_file', default=None,
                         help="Path to val data")
     parser.add_argument('-test_file', '--test_file', required=True,
                         help="Path to test data")
-    parser.add_argument('-lm', '--lm', default='bert-base-multilingual-cased',
+    parser.add_argument('-lm', '--lm', default='mbert', choices = ['mbert', 'beto', 'xlm17', 'xlm100', 'xlmrb', 'xlmrl'],
                         help="Hugging face language model name")
     parser.add_argument('-type', '--type', default='bert', choices = ['bert', 'bert_linear', 'bert_lstm', 'bert_lstm_att'],
                         help="Model type")
@@ -113,7 +114,7 @@ if __name__ == '__main__':
                         help="Class label for the classifier")
     parser.add_argument('--save_model', action="store_true", 
 						help='whether to save the model')
-    parser.add_argument('--save_dir', default="./../../logs",
+    parser.add_argument('--save_dir', default="~/IberLEF_2022/logs",
                      help='Model dir')
     parser.add_argument('--EPOCHS', default=2, type=int,
                      help='Number of epochs. Default 2')
@@ -127,12 +128,23 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     np.random.seed(112)
-    if args.val_file is None:
-        df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=.1)
-    else:
-        df_val = load_data(args.val_file, agg=0)
-    df_test = load_data(args.test_file, agg=0)
-    print("DataSplit:", len(df_train), len(df_val), len(df_test))
+    # language model dictionary
+    lmdict = { 'xlm17' : 'xlm-mlm-17-1280',
+              'xlm100' : 'xlm-mlm-100-1280',
+              'beto' : 'dccuchile/bert-base-spanish-wwm-cased',
+               'mbert' : 'bert-base-multilingual-cased',
+               'xlmrb' : 'xlm-roberta-base',
+                 'xlmrl' : 'xlm-roberta-large'}
+    args.lm = lmdict[args.lm]
+
+    #if args.val_file is None:
+    df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=.1)
+    #else:
+    #    df_val = load_data(args.val_file, agg=0)
+    
+    # validation data provided by organizers
+    df_test1 = load_data(args.test_file, agg=0)
+    print("DataSplit:", len(df_train), len(df_val), len(df_test1))
     
     dtrain, dval = spanish_dataset(df_train, args.lm, args.lclass), spanish_dataset(df_val, args.lm, args.lclass)
     train_dataloader = torch.utils.data.DataLoader(dtrain, batch_size=args.BATCH_SIZE, shuffle=True)
@@ -148,10 +160,15 @@ if __name__ == '__main__':
     if args.type == 'bert_lstm_att':
         model = BiLSTM_Attention(args.lm, nclass)
 
+    print(f"\n Experiment Info : {args}\n")
     model = train(model, train_dataloader, val_dataloader, args)
 
     # testing
     #print(dtrain.label_encoder)
     #print(df_test)
-    load_and_run(df_test, args, dtrain.label_encoder, model, no_labels=True)
-
+    print("\nTesting on real development set")
+    load_and_run(df_test1, args, dtrain.label_encoder, model)
+    print('#'*20)
+    print("*"*20,"Getting output on unseen test", "*"*20)
+    df_test2 = load_data(args.val_file, agg=0)
+    load_and_run(df_test2, args, dtrain.label_encoder, model, no_labels=True)

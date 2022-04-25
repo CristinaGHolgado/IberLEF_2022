@@ -52,7 +52,8 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False):
             val_label = val_label.to(device)
             mask = val_input['attention_mask'].to(device)
             input_id = val_input['input_ids'].squeeze(1).to(device)
-
+            if 'xlm1' in args.lm:
+                mask = mask.squeeze(1)
             output = model(input_id, mask)
 
             batch_loss = criterion(output, val_label.to(torch.long))
