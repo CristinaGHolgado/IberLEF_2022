@@ -94,7 +94,7 @@ def get_tfidf(dfs, col='tweet'):
 
 
 
-def get_ngramfeat(dfs, ngram=(1,1), score_type='count', col='tweet'):
+def get_ngramfeat(dfs, ngram=(1,3), score_type='count', col='tweet'):
 
     from stop_words import get_stop_words
     stop_words = get_stop_words('spanish')
@@ -116,7 +116,7 @@ def return_wvecs(train_tweets):
 
     #model = Word2Vec(sentences=corpus, vector_size=100, window=5, min_count=1, workers=4)
     # add location to saved model
-    model = Word2Vec.load("/home/amansinha/IberLEF_2022/notebook/word2vec.model")
+    model = Word2Vec.load("/home/amansinha/IberLEF_2022/notebook/word2vec_raw.model")
 
     x_train = []
     for sen in tqdm(train_tweets, desc="extracting features"):
@@ -126,7 +126,10 @@ def return_wvecs(train_tweets):
             sens.extend(ss.split(' '))
         wvs = []
         for w in sens:
-            wvs.append(model.wv[w])
+            if w in model.wv:
+                wvs.append(model.wv[w])
+            else:
+                wvs.append(np.random.rand(100))
         wvs = np.asarray(wvs)
         x_train.append(np.mean(wvs, axis=0))
         
