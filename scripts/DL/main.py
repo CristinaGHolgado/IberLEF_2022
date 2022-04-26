@@ -104,8 +104,10 @@ if __name__ == '__main__':
                         help="Path to training data") 
     parser.add_argument('-val_file', '--val_file', default=None,
                         help="Path to val data")
-    parser.add_argument('-test_file', '--test_file', required=True,
+    parser.add_argument('-test_file1', '--test_file1', required=True,
                         help="Path to test data")
+    parser.add_argument('-test_file2', '--test_file2', required=True,
+                        help="Path to test data unlabeled data")
     parser.add_argument('-lm', '--lm', default='mbert', choices = ['mbert', 'beto', 'xlm17', 'xlm100', 'xlmrb', 'xlmrl'],
                         help="Hugging face language model name")
     parser.add_argument('-type', '--type', default='bert', choices = ['bert', 'bert_linear', 'bert_lstm', 'bert_lstm_att'],
@@ -138,12 +140,13 @@ if __name__ == '__main__':
     args.lm = lmdict[args.lm]
 
     #if args.val_file is None:
-    df_train, df_val = train_test_split(load_data(args.train_file, agg=0), test_size=.1)
+    df_train = load_data(args.train_file, agg=0)
+    df_val = load_data(args.val_file, agg=0)
     #else:
     #    df_val = load_data(args.val_file, agg=0)
     
     # validation data provided by organizers
-    df_test1 = load_data(args.test_file, agg=0)
+    df_test1 = load_data(args.test_file1, agg=0)
     print("DataSplit:", len(df_train), len(df_val), len(df_test1))
     
     dtrain, dval = spanish_dataset(df_train, args.lm, args.lclass), spanish_dataset(df_val, args.lm, args.lclass)
@@ -167,7 +170,7 @@ if __name__ == '__main__':
     #print(dtrain.label_encoder)
     #print(df_test)
     print("\nTesting on real development set")
-    load_and_run(df_test1, args, dtrain.label_encoder, model, name="devset")
+    load_and_run(df_test2, args, dtrain.label_encoder, model, name="devset")
     print('#'*20)
     print("*"*20,"Getting output on unseen test", "*"*20)
     df_test2 = load_data(args.val_file, agg=0)
