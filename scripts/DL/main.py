@@ -4,7 +4,7 @@ Created on Fri Apr  8 10:50:32 2022
 
 @author: Cristina GH
 """
-
+import time
 import argparse
 import torch
 import numpy as np
@@ -29,21 +29,21 @@ def train(model, train_dataloader, val_dataloader, args):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr= args.LR)
     
-    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[4]}_model_{datetime.now()}.pth")
+    early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth")
 
     if use_cuda:
         model = model.cuda()
         criterion = criterion.cuda()
-
+    
     for epoch_num in range(args.EPOCHS):
         total_acc_train = 0
         total_loss_train = 0
-
+        t1 = time.time()
         model.train()
         for train_input, train_label in tqdm(train_dataloader, desc="Training"):
             train_label = train_label.to(device)
             mask = train_input['attention_mask'].to(device)
-            if 'xlm1' in args.lm:
+            if 'xlm-m' in args.lm:
                 mask = mask.squeeze(1)
             input_id = train_input['input_ids'].squeeze(1).to(device)
             
@@ -70,7 +70,7 @@ def train(model, train_dataloader, val_dataloader, args):
                 val_label = val_label.to(device)
                 mask = val_input['attention_mask'].to(device)
                 input_id = val_input['input_ids'].squeeze(1).to(device)
-                if 'xlm1' in args.lm:
+                if 'xlm-m' in args.lm:
                     mask = mask.squeeze(1)
                 output = model(input_id, mask)
 
@@ -85,14 +85,14 @@ def train(model, train_dataloader, val_dataloader, args):
             if early_stopping.early_stop:
                 print('Early stopping')
                 break 
-        
+        t2 = time.time()
         print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(df_train): .6f} \
                 | Train Accuracy: {total_acc_train / len(df_train): .4f} \
                 | Val Loss: {total_loss_val / len(df_val): .6f} \
-                | Val Accuracy: {total_acc_val / len(df_val): .4f}')
+                | Val Accuracy: {total_acc_val / len(df_val): .4f} | Time : {t2-t1: .4f}')
      
     if args.save_model : 
-        torch.save(model.state_dict(), f"{args.save_dir}/final_{args.type}_{args.lclass}_{args.lm[4]}_model_{datetime.now()}.pth"); print('model saved') 
+        torch.save(model.state_dict(), f"{args.save_dir}/final_{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth"); print('model saved') 
 
     return model
 
@@ -167,8 +167,8 @@ if __name__ == '__main__':
     #print(dtrain.label_encoder)
     #print(df_test)
     print("\nTesting on real development set")
-    load_and_run(df_test1, args, dtrain.label_encoder, model)
+    load_and_run(df_test1, args, dtrain.label_encoder, model, name="devset")
     print('#'*20)
     print("*"*20,"Getting output on unseen test", "*"*20)
     df_test2 = load_data(args.val_file, agg=0)
-    load_and_run(df_test2, args, dtrain.label_encoder, model, no_labels=True)
+    load_and_run(df_test2, args, dtrain.label_encoder, model, no_labels=True, name="test")

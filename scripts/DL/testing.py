@@ -10,7 +10,7 @@ from sklearn.metrics import classification_report
 from model import BertClassifier
 from data import spanish_dataset
 
-def load_and_run(df, args, label_dict, model=None, no_labels=False):
+def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
     # model path
     path = '../../logs/'
     id2label = dict(zip(label_dict.values(), label_dict.keys()))
@@ -52,7 +52,7 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False):
             val_label = val_label.to(device)
             mask = val_input['attention_mask'].to(device)
             input_id = val_input['input_ids'].squeeze(1).to(device)
-            if 'xlm1' in args.lm:
+            if 'xlm-m' in args.lm:
                 mask = mask.squeeze(1)
             output = model(input_id, mask)
 
@@ -81,7 +81,7 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False):
     output_df = pd.DataFrame()
     output_df['label'] = df.label
     output_df[args.lclass] =  [id2label[l] for l in preds]
-    output_df.to_csv(f'output_{args.lclass}_{args.type}.csv', sep='\t')
+    output_df.to_csv(f'output_{args.lclass}_{args.type}_{args.lm[:4]}_{name}.csv', sep='\t')
 
 if __name__ == '__main__':
     
@@ -104,3 +104,4 @@ if __name__ == '__main__':
 
     # save the models in the logs folder 
     # python testing.py --modelname 'bertmodel_2022-04-11 16:14:52.257235.pth'  --file ../../data/development_test.csv 
+
