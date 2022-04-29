@@ -14,6 +14,7 @@ from tqdm import tqdm
 from datetime import datetime
 from utils import EarlyStopping
 import sklearn
+from sklearn.utils import compute_class_weight
 from sklearn.model_selection import train_test_split
 
 from data import load_data, spanish_dataset
@@ -25,8 +26,9 @@ def train(model, train_dataloader, val_dataloader, args):
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
-
-    criterion = nn.CrossEntropyLoss()
+    
+    class_weights = torch.tensor(compute_class_weight(class_weight = 'balanced', classes = np.unique(df_train[args.lclass]), y =  df_train[args.lclass]))
+    criterion = nn.CrossEntropyLoss(weight=class_weights.float()).to(device)
     optimizer = Adam(model.parameters(), lr= args.LR)
     
     early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth")
