@@ -79,7 +79,7 @@ class spanish_dataset(torch.utils.data.Dataset):
         tokenizer = AutoTokenizer.from_pretrained(lm)
         self.texts = [tokenizer(text, 
                                padding='max_length', max_length=128, truncation=True,
-                                return_tensors="pt") for text in df['tweet']]
+                                return_tensors="pt") for text in df['clean_data']]
 
     def classes(self):
         return self.labels
