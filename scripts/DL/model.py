@@ -79,7 +79,7 @@ class LSTM(nn.Module):
         output_hidden = F.dropout(output_hidden, 0.2)
         output = self.clf(output_hidden)
         
-        return F.sigmoid(output)
+        return torch.sigmoid(output)
     
 
 class BiLSTM_Attention(nn.Module):
@@ -99,7 +99,7 @@ class BiLSTM_Attention(nn.Module):
         attn_weights = torch.bmm(lstm_output, hidden).squeeze(2) # attn_weights : [batch_size, n_step]
         soft_attn_weights = F.softmax(attn_weights, 1)
         context = torch.bmm(lstm_output.transpose(1, 2), soft_attn_weights.unsqueeze(2)).squeeze(2)
-        return context, soft_attn_weights.data.numpy() # context : [batch_size, n_hidden * num_directions(=2)]
+        return context, soft_attn_weights.data.detach().cpu().numpy() # context : [batch_size, n_hidden * num_directions(=2)]
 
     def forward(self, input_ids, masks):
         with torch.no_grad():

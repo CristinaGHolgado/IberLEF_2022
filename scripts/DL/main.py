@@ -16,6 +16,7 @@ from utils import EarlyStopping
 import sklearn
 from sklearn.utils import compute_class_weight
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, classification_report, f1_score
 
 from data import load_data, spanish_dataset
 from model import BertClassifier, LSTM, BiLSTM_Attention, SimpleBert
@@ -29,6 +30,8 @@ def train(model, train_dataloader, val_dataloader, args):
     
     class_weights = torch.tensor(compute_class_weight(class_weight = 'balanced', classes = np.unique(df_train[args.lclass]), y =  df_train[args.lclass]))
     criterion = nn.CrossEntropyLoss(weight=class_weights.float()).to(device)
+
+    # criterion = nn.CrossEntropyLoss() #.to(device)
     optimizer = Adam(model.parameters(), lr= args.LR)
     
     early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth")
@@ -64,6 +67,7 @@ def train(model, train_dataloader, val_dataloader, args):
             
         total_acc_val = 0
         total_loss_val = 0
+        val_labels, val_preds = [], []
         model.eval()
         with torch.no_grad():
             
@@ -78,7 +82,7 @@ def train(model, train_dataloader, val_dataloader, args):
 
                 batch_loss = criterion(output, val_label.to(torch.long))
                 total_loss_val += batch_loss.item()
-                    
+                val_labels.extend(val_label.detach().cpu().numpy()); val_preds.extend(output.argmax(dim=1).detach().cpu().numpy())
                 acc = (output.argmax(dim=1) == val_label.to(torch.long)).sum().item()
                 total_acc_val += acc
             
@@ -88,10 +92,12 @@ def train(model, train_dataloader, val_dataloader, args):
                 print('Early stopping')
                 break 
         t2 = time.time()
-        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train / len(df_train): .6f} \
+        print(f'Epochs: {epoch_num + 1} | Train Loss: {total_loss_train} \
                 | Train Accuracy: {total_acc_train / len(df_train): .4f} \
                 | Val Loss: {total_loss_val / len(df_val): .6f} \
-                | Val Accuracy: {total_acc_val / len(df_val): .4f} | Time : {t2-t1: .4f}')
+                | Val Accuracy: {total_acc_val / len(df_val): .4f}\
+                | Time : {t2-t1: .4f}')
+        print("val confusion matrix", confusion_matrix(val_labels, val_preds))
      
     if args.save_model : 
         torch.save(model.state_dict(), f"{args.save_dir}/final_{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth"); print('model saved') 
