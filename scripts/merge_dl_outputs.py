@@ -35,7 +35,7 @@ def merge_outputs(folder_path, output_folder):
     merged_outputs = merged_outputs[['label','gender','profession','ideology_binary','ideology_multiclass']]
     
     name = "_".join(os.listdir(folder_path)[0].split('_')[2:]).replace("_test","_mergedTest")
-    merged_outputs.to_csv(f"{output_folder}merged_output_bert_beto.csv", sep=",", index=False)
+    merged_outputs.to_csv(f"{output_folder}{name}", sep=",", index=False)
     
 
 
