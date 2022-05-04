@@ -16,7 +16,8 @@ import torch
 from transformers import AutoTokenizer, AutoModel
 import tqdm
 
-def load_data(file, agg=1):      
+def load_data(file, agg=1, augmented=None):
+    print('augmented', augmented)     
     with open(file, 'r', encoding='utf-8') as csvfile:
         
         dialect = csv.Sniffer().sniff(csvfile.readline()) # detect delimiter
@@ -32,6 +33,11 @@ def load_data(file, agg=1):
         if agg == 0: 
             # without aggregating
             return df
+        if augmented:
+            added_df = pd.concat([df[['label',args.lclass]],
+                                  pd.read_csv(augmented, sep=",")[['label',args.lclass]]], axis=1)
+            print(added_df.head(10))
+            return added_df
             
         columns_to_group_by_user = ['label', 'gender', 'profession', 'ideology_binary', 'ideology_multiclass']
         data_columns = ['tweet','clean_data','lemmatized_data','lemmatized_nostw', 'emojis']

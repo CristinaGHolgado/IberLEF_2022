@@ -109,7 +109,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument('-train_file', '--train_file', required=True,
-                        help="Path to training data") 
+                        help="Path to training data")
+    parser.add_argument('--augdata', '--augdata', required=True,
+                        help="Path to augmented training data")
     parser.add_argument('-val_file', '--val_file', default=None,
                         help="Path to val data")
     parser.add_argument('-test_file1', '--test_file1', required=True,
@@ -134,6 +136,7 @@ if __name__ == '__main__':
                      help='Batch size')
     parser.add_argument('--stop_early', action="store_true", 
 						help='whether to use early stopping')
+
     
     args = parser.parse_args()
     
@@ -148,7 +151,7 @@ if __name__ == '__main__':
     args.lm = lmdict[args.lm]
 
     #if args.val_file is None:
-    df_train = load_data(args.train_file, agg=0)
+    df_train = load_data(args.train_file, agg=0, augmented=args.augdata)
     df_val = load_data(args.val_file, agg=0)
     #else:
     #    df_val = load_data(args.val_file, agg=0)
