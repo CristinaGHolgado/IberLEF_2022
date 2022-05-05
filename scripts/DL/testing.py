@@ -21,7 +21,7 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
         print('adding false labels for testing_no_labels files...')
 
     val = spanish_dataset(df, args.lm, args.lclass)
-    val_dataloader = torch.utils.data.DataLoader(val, batch_size=100)
+    val_dataloader = torch.utils.data.DataLoader(val, batch_size=args.bs)
 
 
     if model is None:
@@ -47,14 +47,29 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
     total_loss_val = 0
     preds, truth = [], []
     with torch.no_grad():
-        for val_input, val_label in tqdm(val_dataloader):
-                    
+        for val_input, val_label in tqdm(val_dataloader, desc='Evaluating'):
+            
             val_label = val_label.to(device)
             mask = val_input['attention_mask'].to(device)
             input_id = val_input['input_ids'].squeeze(1).to(device)
             if 'xlm-m' in args.lm:
                 mask = mask.squeeze(1)
-            output = model(input_id, mask)
+            if args.type ==  'cnnbert':
+                type_ids = val_input['token_type_ids'].squeeze(1).to(device)
+
+                output = model(input_id, mask, type_ids)
+                del input_id
+                del masks
+                del type_ids
+                
+            else:
+                output = model(input_id, mask)
+                del input_id
+                del masks
+                
+            
+            gc.collect()
+            torch.cuda.empty_cache()
 
             batch_loss = criterion(output, val_label.to(torch.long))
             total_loss_val += batch_loss.item()
