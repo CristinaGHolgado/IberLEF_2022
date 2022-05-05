@@ -8,6 +8,7 @@ import time
 import argparse
 import torch
 import numpy as np
+import pandas as pd
 from torch import nn
 from torch.optim import Adam
 from tqdm import tqdm
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     
     parser.add_argument('-train_file', '--train_file', required=True,
                         help="Path to training data")
-    parser.add_argument('--augdata', '--augdata', required=True,
+    parser.add_argument('--augment', '--augment', action="store_true", 
                         help="Path to augmented training data")
     parser.add_argument('-val_file', '--val_file', default=None,
                         help="Path to val data")
@@ -151,8 +152,27 @@ if __name__ == '__main__':
     args.lm = lmdict[args.lm]
 
     #if args.val_file is None:
-    df_train = load_data(args.train_file, agg=0, augmented=args.augdata)
+    df_train = load_data(args.train_file, agg=0)
     df_val = load_data(args.val_file, agg=0)
+    if args.augment :
+        print(f'Going to use augment for {args.lclass}')
+        aug_data = pd.read_csv(f'../../notebook/augment_{args.lclass}.csv', sep='\t')
+        #print(aug_data.head())
+        print('==>\n', df_train[['tweet',args.lclass]])
+        #print('===>\n', aug_data[['tweet',args.lclass]])
+        added_df = pd.concat([df_train[['tweet',args.lclass]],
+                                  aug_data[['tweet',args.lclass]]], axis=0).reset_index()
+        #print(added_df)
+        ldict = dict()
+        for l in added_df[args.lclass]:
+            if l in ldict:
+                ldict[l] += 1
+            else:
+                ldict[l] = 1
+
+        print("New traindata label districution :", ldict)
+        df_train = added_df
+
     #else:
     #    df_val = load_data(args.val_file, agg=0)
     
@@ -186,3 +206,4 @@ if __name__ == '__main__':
     print("*"*20,"Getting output on unseen test", "*"*20)
     df_test2 = load_data(args.test_file2, agg=0)
     load_and_run(df_test2, args, dtrain.label_encoder, model, no_labels=True, name="test")
+    '''
