@@ -156,12 +156,18 @@ if __name__ == '__main__':
     df_val = load_data(args.val_file, agg=0)
     if args.augment :
         print(f'Going to use augment for {args.lclass}')
-        aug_data = pd.read_csv(f'../../notebook/augment_{args.lclass}.csv', sep='\t')
+        try:
+            aug_data = pd.read_csv(f'../../notebook/augment_{args.lclass}.csv', sep='\t')
+        except FileNotFoundError:
+            aug_data = pd.read_csv(f'data\\augmented\\augment_{args.lclass}.csv', sep='\t')
+        print(f"Size of augmented data: {len(aug_data)}")
+        print(f"Size of training data: {len(df_train)}")
         #print(aug_data.head())
         print('==>\n', df_train[['tweet',args.lclass]])
         #print('===>\n', aug_data[['tweet',args.lclass]])
         added_df = pd.concat([df_train[['tweet',args.lclass]],
                                   aug_data[['tweet',args.lclass]]], axis=0).reset_index()
+        print(f"Size of added augmented data: {len(added_df)}")
         #print(added_df)
         ldict = dict()
         for l in added_df[args.lclass]:
@@ -206,4 +212,3 @@ if __name__ == '__main__':
     print("*"*20,"Getting output on unseen test", "*"*20)
     df_test2 = load_data(args.test_file2, agg=0)
     load_and_run(df_test2, args, dtrain.label_encoder, model, no_labels=True, name="test")
-    '''
