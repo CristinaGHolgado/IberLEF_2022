@@ -34,7 +34,7 @@ def train(model, train_dataloader, val_dataloader, args):
 
     # criterion = nn.CrossEntropyLoss() #.to(device)
     optimizer = Adam(model.parameters(), lr= args.LR)
-    
+    warmup = 10
     early_stopping = EarlyStopping(patience=5, verbose=True, save_path=f"{args.save_dir}/{args.type}_{args.lclass}_{args.lm[:4]}_model_{datetime.now()}.pth")
 
     if use_cuda:
@@ -87,7 +87,7 @@ def train(model, train_dataloader, val_dataloader, args):
                 acc = (output.argmax(dim=1) == val_label.to(torch.long)).sum().item()
                 total_acc_val += acc
             
-        if args.stop_early:
+        if epoch_num > warmup and args.stop_early:
             early_stopping(total_loss_val, model)
             if early_stopping.early_stop:
                 print('Early stopping')
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     if args.augment :
         print(f'Going to use augment for {args.lclass}')
         try:
-            aug_data = pd.read_csv(f'../../notebook/augment_{args.lclass}.csv', sep='\t')
+            aug_data = pd.read_csv(f'~/IberLEF_2022/notebook/augment_{args.lclass}.csv', sep='\t')
         except FileNotFoundError:
             aug_data = pd.read_csv(f'data\\augmented\\augment_{args.lclass}.csv', sep='\t')
         print(f"Size of augmented data: {len(aug_data)}")

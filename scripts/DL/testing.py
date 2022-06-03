@@ -4,6 +4,7 @@ from torch import nn
 from tqdm import tqdm
 import pandas as pd
 import argparse
+import gc
 
 from sklearn.metrics import classification_report
 
@@ -21,7 +22,7 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
         print('adding false labels for testing_no_labels files...')
 
     val = spanish_dataset(df, args.lm, args.lclass)
-    val_dataloader = torch.utils.data.DataLoader(val, batch_size=args.bs)
+    val_dataloader = torch.utils.data.DataLoader(val, batch_size=args.BATCH_SIZE)
 
 
     if model is None:
@@ -59,13 +60,13 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
 
                 output = model(input_id, mask, type_ids)
                 del input_id
-                del masks
+                del mask
                 del type_ids
                 
             else:
                 output = model(input_id, mask)
                 del input_id
-                del masks
+                del mask
                 
             
             gc.collect()
@@ -89,7 +90,8 @@ def load_and_run(df, args, label_dict, model=None, no_labels=False, name='val'):
         print(f' Val Loss: {total_loss_val / len(df): .3f} \
                     | Val Accuracy: {total_acc_val / len(df): .3f}')
 
-    
+    if args.augment:
+        name = name+'aug'
     
     # create output file
     #preds = [0] *  len(df)
